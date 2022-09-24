@@ -25,15 +25,20 @@ const getIsochroneForCoord = async (coordinates: Number[]) => {
 const getPolygonsForCategory = (category: String, places: any) => {
   return Promise.all(
     places.map(async (place: { center: Number[] }) => {
-      return await getIsochroneForCoord(place.center);
+      const isochrone = await getIsochroneForCoord(place.center);
+      // console.log("isocrone", isochrone);
+      return isochrone;
     })
   );
 };
 
-const mergePolygons = (polygons: martinez.Polygon[]) => {
-  return polygons.reduce((acc = [], curPolygon = []) => {
-    return martinez.union(acc, curPolygon);
-  }, []);
+const mergePolygons = (polygons: any) => {
+  return polygons.reduce(
+    (acc, curPolygon = []) => {
+      return martinez.union(acc, curPolygon);
+    },
+    [[[]]]
+  );
 };
 
 export const loader = async ({ params }: LoaderArgs) => {
@@ -44,21 +49,17 @@ export const loader = async ({ params }: LoaderArgs) => {
     const polygons = (
       await getPolygonsForCategory(category, places.features)
     ).map((polygon) => {
-      return polygon.features[0].geometry.coordinates;
+      return polygon.features[0].geometry.coordinates[0];
     });
-    console.log("pas", JSON.stringify(polygons));
 
     return {
       ...(await res),
       [category]: {
         places: places.features,
-        // polygon: mergePolygons(polygons),
+        polygon: mergePolygons(polygons),
       },
     };
   }, {});
-
-  // Object.entries([key, value])
-  // const isochronedata =
 
   return { data: placesData };
 };

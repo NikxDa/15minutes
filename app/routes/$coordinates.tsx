@@ -1,25 +1,66 @@
 import { useLoaderData } from "@remix-run/react";
 import type { LoaderArgs } from "@remix-run/server-runtime";
+import * as martinez from "martinez-polygon-clipping";
 
 const CATEGORIES = ["supermarket", "doctor", "school"];
 
-const getPlacesForCoord = (coordinates: String) => async (category: String) => {
+const getCategoryLocator = async (coordinates: String, category: String) => {
   const result = await fetch(
     `https://api.mapbox.com/geocoding/v5/mapbox.places/${category}.json?limit=9&bbox=${coordinates}&access_token=${process.env.MAPBOX_API_KEY}`
   );
   return await result.json();
 };
 
+const getIsochroneForCoord = async (coordinates: Number[]) => {
+  const result = await fetch(
+    `https://api.mapbox.com/isochrone/v1/mapbox/cycling/${encodeURIComponent(
+      coordinates.join(",")
+    )}?contours_minutes=15&polygons=true&denoise=1&access_token=${
+      process.env.MAPBOX_API_KEY
+    }`
+  );
+  return await result.json();
+};
+
+const getPolygonsForCategory = (category: String, places: any) => {
+  return Promise.all(
+    places.map(async (place: { center: Number[] }) => {
+      return await getIsochroneForCoord(place.center);
+    })
+  );
+};
+
+const mergePolygons = (polygons: martinez.Polygon[]) => {
+  return polygons.reduce((acc = [], curPolygon = []) => {
+    return martinez.union(acc, curPolygon);
+  }, []);
+};
+
 export const loader = async ({ params }: LoaderArgs) => {
   const { coordinates } = params;
-  const getPlacesForCategory = getPlacesForCoord(coordinates || "");
+  const placesData = await CATEGORIES.reduce(async (res, category) => {
+    const places = await getCategoryLocator(coordinates || "", category);
 
-  const data = await CATEGORIES.reduce(async (res, category) => {
-    const response = await getPlacesForCategory(category);
-    return { ...(await res), [category]: response.features };
+    const polygons = (
+      await getPolygonsForCategory(category, places.features)
+    ).map((polygon) => {
+      return polygon.features[0].geometry.coordinates;
+    });
+    console.log("pas", JSON.stringify(polygons));
+
+    return {
+      ...(await res),
+      [category]: {
+        places: places.features,
+        // polygon: mergePolygons(polygons),
+      },
+    };
   }, {});
 
-  return { data };
+  // Object.entries([key, value])
+  // const isochronedata =
+
+  return { data: placesData };
 };
 
 export default () => {

@@ -27,8 +27,8 @@ export default function Index() {
     return [minX, minY, maxX, maxY];
   };
 
-  const getCoordinatesUrl = () =>
-    encodeURIComponent(getCoordinates().join(","));
+  const getCoordinatesUrl = () => getCoordinates().join(",");
+  // encodeURIComponent(getCoordinates().join(","));
 
   return (
     <div className="flex justify-end">

@@ -52,15 +52,18 @@ export default function Index() {
     if (!map) return [];
 
     const canvas = map.getCanvas();
-    const cUL = map.unproject([0, 0]).toArray();
-    const cUR = map.unproject([canvas.width, 0]).toArray();
-    const cLR = map.unproject([canvas.width, canvas.height]).toArray();
-    const cLL = map.unproject([0, canvas.height]).toArray();
+    // const cUL = map.unproject([0, 0]).toArray();
+    const minX = map.unproject([0, 0]).lng;
+    // const cUR = map.unproject([canvas.width, 0]).toArray();
+    const maxX = map.unproject([canvas.width, 0]).lng;
+    const minY = map.unproject([0, canvas.height]).lat;
+    const maxY = map.unproject([canvas.width, 0]).lat;
 
-    return [cUL, cUR, cLR, cLL, cUL];
+    return [minX, minY, maxX, maxY];
   };
 
-  const getCoordinatesUrl = () => getCoordinates().join(":");
+  const getCoordinatesUrl = () =>
+    encodeURIComponent(getCoordinates().join(","));
 
   return (
     <main className="relative">

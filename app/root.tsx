@@ -1,5 +1,4 @@
 import type { LinksFunction, LoaderArgs, MetaFunction } from "@remix-run/node";
-import { json } from "@remix-run/node";
 import {
   Links,
   LiveReload,
@@ -10,7 +9,6 @@ import {
 } from "@remix-run/react";
 
 import "mapbox-gl/dist/mapbox-gl.css";
-import { getUser } from "./session.server";
 import tailwindStylesheetUrl from "./styles/tailwind.css";
 
 export const links: LinksFunction = () => {
@@ -30,9 +28,7 @@ export const meta: MetaFunction = () => ({
 });
 
 export async function loader({ request }: LoaderArgs) {
-  return json({
-    user: await getUser(request),
-  });
+  return null;
 }
 
 export default function App() {

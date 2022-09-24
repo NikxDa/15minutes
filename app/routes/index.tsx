@@ -1,5 +1,5 @@
-import { useLoaderData } from "@remix-run/react";
-import { LoaderArgs } from "@remix-run/server-runtime";
+import { Link, useLoaderData } from "@remix-run/react";
+import type { LoaderArgs } from "@remix-run/server-runtime";
 import mapboxgl from "mapbox-gl";
 import { useEffect, useState } from "react";
 
@@ -48,25 +48,31 @@ export default function Index() {
     );
   }, []);
 
+  const getCoordinates = () => {
+    if (!map) return [];
+
+    const canvas = map.getCanvas();
+    const cUL = map.unproject([0, 0]).toArray();
+    const cUR = map.unproject([canvas.width, 0]).toArray();
+    const cLR = map.unproject([canvas.width, canvas.height]).toArray();
+    const cLL = map.unproject([0, canvas.height]).toArray();
+
+    return [cUL, cUR, cLR, cLL, cUL];
+  };
+
+  const getCoordinatesUrl = () => getCoordinates().join(":");
+
   return (
     <main className="relative">
       <div id="map" className="h-screen w-screen" />
-      <button
-        className="absolute top-12 right-12 rounded-md bg-white px-4 py-2 shadow-lg disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
-        onClick={() => {
-          const canvas = map.getCanvas();
-          const cUL = map.unproject([0, 0]).toArray();
-          const cUR = map.unproject([canvas.width, 0]).toArray();
-          const cLR = map.unproject([canvas.width, canvas.height]).toArray();
-          const cLL = map.unproject([0, canvas.height]).toArray();
-
-          const coordinates = [cUL, cUR, cLR, cLL, cUL];
-          console.log(coordinates);
-        }}
-        disabled={!canAnalyze}
-      >
-        Analyze
-      </button>
+      <Link to={getCoordinatesUrl()}>
+        <button
+          className="absolute top-12 right-12 rounded-md bg-white px-4 py-2 shadow-lg disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
+          disabled={!canAnalyze}
+        >
+          Analyze
+        </button>
+      </Link>
     </main>
   );
 }

@@ -16,22 +16,19 @@ export default function Index() {
   }, [map]);
 
   const getCoordinates = () => {
-    if (!map) return;
+    if (!map) return [];
 
     const canvas = map.getCanvas();
-    const cUL = map.unproject([0, 0]).toArray();
-    const cUR = map.unproject([canvas.width, 0]).toArray();
-    const cLR = map.unproject([canvas.width, canvas.height]).toArray();
-    const cLL = map.unproject([0, canvas.height]).toArray();
+    const minX = map.unproject([0, 0]).lng;
+    const maxX = map.unproject([canvas.width, 0]).lng;
+    const minY = map.unproject([0, canvas.height]).lat;
+    const maxY = map.unproject([canvas.width, 0]).lat;
 
-    const coordinates = [cUL, cUR, cLR, cLL, cUL];
-    return coordinates;
+    return [minX, minY, maxX, maxY];
   };
 
-  const getCoordinatesUrl = () => {
-    const coordinates = getCoordinates();
-    return coordinates?.join(":");
-  };
+  const getCoordinatesUrl = () => getCoordinates().join(",");
+  // encodeURIComponent(getCoordinates().join(","));
 
   return (
     <div className="flex justify-end">

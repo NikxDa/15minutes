@@ -9,11 +9,18 @@ import {
   ScrollRestoration,
 } from "@remix-run/react";
 
-import tailwindStylesheetUrl from "./styles/tailwind.css";
+import "mapbox-gl/dist/mapbox-gl.css";
 import { getUser } from "./session.server";
+import tailwindStylesheetUrl from "./styles/tailwind.css";
 
 export const links: LinksFunction = () => {
-  return [{ rel: "stylesheet", href: tailwindStylesheetUrl }];
+  return [
+    { rel: "stylesheet", href: tailwindStylesheetUrl },
+    {
+      rel: "stylesheet",
+      href: "https://api.mapbox.com/mapbox-gl-js/v2.10.0/mapbox-gl.css",
+    },
+  ];
 };
 
 export const meta: MetaFunction = () => ({

@@ -48,10 +48,14 @@ export default function App() {
         <Links />
       </head>
       <body className="h-full">
-        <MapProvider>
-          <Map className="h-screen w-screen" accessToken={mapboxApiKey} />
-          <Outlet />
-        </MapProvider>
+        <main className="relative">
+          <MapProvider>
+            <Map className="h-screen w-screen" accessToken={mapboxApiKey} />
+            <div className="pointer-events-none absolute inset-0 p-12 [&>*]:pointer-events-auto">
+              <Outlet />
+            </div>
+          </MapProvider>
+        </main>
         <ScrollRestoration />
         <Scripts />
         <LiveReload />

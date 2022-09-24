@@ -11,7 +11,6 @@ export default function Index() {
 
     map.on("zoom", () => {
       const canZoom = map.getZoom() > 10;
-      console.log(map.getZoom(), canZoom);
       setCanAnalyze(canZoom);
     });
   }, [map]);
@@ -35,9 +34,9 @@ export default function Index() {
   };
 
   return (
-    <main className="relative">
+    <div className="flex justify-end">
       <Link
-        to={`/analyze/${getCoordinatesUrl()}`}
+        to={`${getCoordinatesUrl()}`}
         className="absolute top-12 right-12"
         type="submit"
       >
@@ -48,6 +47,6 @@ export default function Index() {
           Analyze
         </button>
       </Link>
-    </main>
+    </div>
   );
 }

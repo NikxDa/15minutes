@@ -35,7 +35,7 @@ Click this button to create a [Gitpod](https://gitpod.io) workspace with the pro
 ## Development
 
 - This step only applies if you've opted out of having the CLI install dependencies for you:
-  
+
   ```sh
   npx remix init
   ```
@@ -86,9 +86,10 @@ Prior to your first deployment, you'll need to do a few things:
 - Create two apps on Fly, one for staging and one for production:
 
   ```sh
-  fly apps create indie-stack-template
-  fly apps create indie-stack-template-staging
+  fly apps create 15minutes-a3fa
+  fly apps create 15minutes-a3fa-staging
   ```
+
   > **Note:** Make sure this name matches the `app` set in your `fly.toml` file. Otherwise, you will not be able to deploy.
 
   - Initialize Git.
@@ -108,8 +109,8 @@ Prior to your first deployment, you'll need to do a few things:
 - Add a `SESSION_SECRET` to your fly app secrets, to do this you can run the following commands:
 
   ```sh
-  fly secrets set SESSION_SECRET=$(openssl rand -hex 32) --app indie-stack-template
-  fly secrets set SESSION_SECRET=$(openssl rand -hex 32) --app indie-stack-template-staging
+  fly secrets set SESSION_SECRET=$(openssl rand -hex 32) --app 15minutes-a3fa
+  fly secrets set SESSION_SECRET=$(openssl rand -hex 32) --app 15minutes-a3fa-staging
   ```
 
   If you don't have openssl installed, you can also use [1password](https://1password.com/password-generator/) to generate a random secret, just replace `$(openssl rand -hex 32)` with the generated secret.
@@ -117,8 +118,8 @@ Prior to your first deployment, you'll need to do a few things:
 - Create a persistent volume for the sqlite database for both your staging and production environments. Run the following:
 
   ```sh
-  fly volumes create data --size 1 --app indie-stack-template
-  fly volumes create data --size 1 --app indie-stack-template-staging
+  fly volumes create data --size 1 --app 15minutes-a3fa
+  fly volumes create data --size 1 --app 15minutes-a3fa-staging
   ```
 
 Now that everything is set up you can commit and push your changes to your repo. Every commit to your `main` branch will trigger a deployment to your production environment, and every commit to your `dev` branch will trigger a deployment to your staging environment.
@@ -177,4 +178,5 @@ This project uses ESLint for linting. That is configured in `.eslintrc.js`.
 ### Formatting
 
 We use [Prettier](https://prettier.io/) for auto-formatting in this project. It's recommended to install an editor plugin (like the [VSCode Prettier plugin](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)) to get auto-formatting on save. There's also a `npm run format` script you can run to format all files in the project.
+
 # 15minutes

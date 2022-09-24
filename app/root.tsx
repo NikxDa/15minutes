@@ -6,9 +6,12 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useLoaderData,
 } from "@remix-run/react";
 
 import "mapbox-gl/dist/mapbox-gl.css";
+import Map from "./components/Map";
+import { MapProvider } from "./context/MapContext";
 import tailwindStylesheetUrl from "./styles/tailwind.css";
 
 export const links: LinksFunction = () => {
@@ -27,11 +30,17 @@ export const meta: MetaFunction = () => ({
   viewport: "width=device-width,initial-scale=1",
 });
 
-export async function loader({ request }: LoaderArgs) {
-  return null;
-}
+export const loader = async ({}: LoaderArgs) => {
+  const mapboxApiKey = process.env.MAPBOX_API_KEY as string;
+
+  return {
+    mapboxApiKey,
+  };
+};
 
 export default function App() {
+  const { mapboxApiKey } = useLoaderData<typeof loader>();
+
   return (
     <html lang="en" className="h-full">
       <head>
@@ -39,7 +48,10 @@ export default function App() {
         <Links />
       </head>
       <body className="h-full">
-        <Outlet />
+        <MapProvider>
+          <Map className="h-screen w-screen" accessToken={mapboxApiKey} />
+          <Outlet />
+        </MapProvider>
         <ScrollRestoration />
         <Scripts />
         <LiveReload />

@@ -11,6 +11,7 @@ import { Link, useLoaderData } from "@remix-run/react";
 import type { LoaderArgs } from "@remix-run/server-runtime";
 import * as martinez from "martinez-polygon-clipping";
 import { text } from "node:stream/consumers";
+import FilterBar from "~/components/filterbar/FilterBar";
 
 const CATEGORIES = ["supermarket", "doctor", "school"];
 
@@ -103,6 +104,7 @@ export default () => {
   })
 
   return (
+    <>
     <div className="flex flex-row h-full">
       <div className={"map lg:basis-9/12 basis-4/12" }>
         <Link to="/">  
@@ -120,9 +122,9 @@ export default () => {
                 {
                   showSidebar
                     ?
-                      <ChevronDoubleRightIcon className="h-6 w-6"/>
+                      <ChevronDoubleRightIcon className="h-6 w-6 opcity-60"/>
                     :
-                      <ChevronDoubleLeftIcon className="h-6 w-6 "/>
+                      <ChevronDoubleLeftIcon className="h-6 w-6"/>
                 }
             </button>
             </div>
@@ -144,5 +146,8 @@ export default () => {
             }
             </div>
         </div>
+
+        <FilterBar showSidebar={showSidebar}/>
+        </>
   );
 };

@@ -14,7 +14,7 @@ import { useEffect, useState } from "react";
 import { useMap } from "~/context/MapContext";
 
 const CATEGORIES = ["supermarket", "doctor", "school"];
-const COLOR_CATEGORIES = {
+export const COLOR_CATEGORIES = {
   supermarket: "#A8DAB5",
   doctor: "#FDE295",
   school: "#0080ff",

@@ -7,9 +7,10 @@ import {
 import '../styles/sidebar/sidebar.css'
 import classNames from "classnames";
 import Topic from "~/components/sidebar/Topic";
-import { useLoaderData } from "@remix-run/react";
+import { Link, useLoaderData } from "@remix-run/react";
 import type { LoaderArgs } from "@remix-run/server-runtime";
 import * as martinez from "martinez-polygon-clipping";
+import { text } from "node:stream/consumers";
 
 const CATEGORIES = ["supermarket", "doctor", "school"];
 
@@ -78,11 +79,36 @@ export default () => {
 
   const toggleSidebar = () => setShowSidebar(prev => !prev)
   const { data } = useLoaderData<typeof loader>();
+  const [ dataAsObject, setDataAsObject ] = useState(JSON.parse(JSON.stringify(data)));
 
-  console.log(data);
+  useEffect(()=> {
+    if(data !== undefined) setDataAsObject(JSON.parse(JSON.stringify(data)));
+  }, [])
+  const dataKeys = ["doctor", "school", "supermarket"];
+
+  
+  const formattedData = dataKeys.map((key : any) => {
+    return(
+      { 
+        title : key,
+        data : dataAsObject[key].places.map((placeObject : any) => {
+          return {
+            title : placeObject.text,
+            address : placeObject.properties.address,
+            center : placeObject.center
+          }
+        })
+      }
+    )
+  })
+
   return (
     <div className="flex flex-row h-full">
-      <div className={"map lg:basis-9/12 basis-4/12" }></div>
+      <div className={"map lg:basis-9/12 basis-4/12" }>
+        <Link to="/">  
+          <img src={require('../images/Logo.png')} className="w-20" />
+        </Link>
+      </div>
 
       <div className={classNames("lg:basis-3/12 basis-8/12 h-full max-h-full overflow-auto ", showSidebar && "bg-white shadow-lg shadow-black-500/50")}>
 
@@ -104,14 +130,16 @@ export default () => {
             {
               showSidebar &&
                 <div className="contextWrapper p-5">
-                  <Topic title="Education" content={[
-                    {title: "School A", adress: "Kiefholzstr. 9, 12345 Berlin"},
-                    {title: "School B", adress: "Lohmühlenstr. 12, 12345 Berlin"}
-                  ]} />
-                  <Topic title="Healthcare" content={[
-                    {title: "Marienkrankenhaus", adress: "Kiefholzstr. 2, 12345 Berlin"},
-                    {title: "Krankenhaus B", adress: "Kiefholzstr. 14, 12345 Berlin"}
-                  ]}/>
+                  {
+                    formattedData.map((topicData : any) => {
+                      return(
+                        <Topic title={topicData.title} key={topicData.title}
+                        content={
+                          topicData.data.map((content : any) => {return content})
+                        } />
+                      )
+                    })
+                  }
                 </div>
             }
             </div>

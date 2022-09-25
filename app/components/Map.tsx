@@ -12,12 +12,14 @@ const Map = ({ className, accessToken }: MapProps) => {
   const mapContext = useContext(MapContext);
 
   useEffect(() => {
+    if (mapContext.map) return;
+
     mapboxgl.accessToken = accessToken;
 
     const map = new mapboxgl.Map({
       container: "map",
       style: "mapbox://styles/mapbox/light-v10",
-      center: [-74.5, 40],
+      center: [13, 52],
       zoom: 12,
       projection: { name: "globe" },
     });
@@ -27,6 +29,7 @@ const Map = ({ className, accessToken }: MapProps) => {
     });
 
     mapContext.setMap(map);
+    (window as any).map = map;
 
     navigator.geolocation.getCurrentPosition(
       (position) => {

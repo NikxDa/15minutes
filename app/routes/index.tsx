@@ -1,4 +1,4 @@
-import { Link } from "@remix-run/react";
+import { useNavigate } from "@remix-run/react";
 import { useEffect, useState } from "react";
 import { useMap } from "~/context/MapContext";
 
@@ -30,20 +30,21 @@ export default function Index() {
   const getCoordinatesUrl = () => getCoordinates().join(",");
   // encodeURIComponent(getCoordinates().join(","));
 
+  const navigateTo = useNavigate();
+
   return (
     <div className="flex justify-end">
-      <Link
-        to={`${getCoordinatesUrl()}`}
-        className="absolute top-12 right-12"
-        type="submit"
+      <button
+        onClick={() => {
+          const url = getCoordinatesUrl();
+          console.log(url);
+          navigateTo(url);
+        }}
+        className="rounded-md bg-white px-4 py-2 shadow-lg disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
+        disabled={!canAnalyze}
       >
-        <button
-          className="rounded-md bg-white px-4 py-2 shadow-lg disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
-          disabled={!canAnalyze}
-        >
-          Analyze
-        </button>
-      </Link>
+        Analyze
+      </button>
     </div>
   );
 }

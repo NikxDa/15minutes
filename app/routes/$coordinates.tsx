@@ -1,19 +1,26 @@
-import { useEffect, useState } from "react";
-import { 
-  ChevronDoubleLeftIcon, 
+import {
+  ChevronDoubleLeftIcon,
   ChevronDoubleRightIcon,
-  ChevronDownIcon
-} from '@heroicons/react/24/solid'
-import '../styles/sidebar/sidebar.css'
+  ChevronDownIcon,
+} from "@heroicons/react/24/solid";
+import "../styles/sidebar/sidebar.css";
 import classNames from "classnames";
 import Topic from "~/components/sidebar/Topic";
 import { Link, useLoaderData } from "@remix-run/react";
 import type { LoaderArgs } from "@remix-run/server-runtime";
+import mapboxgl from "mapbox-gl";
 import * as martinez from "martinez-polygon-clipping";
 import { text } from "node:stream/consumers";
 import FilterBar from "~/components/filterbar/FilterBar";
+import { useEffect, useState } from "react";
+import { useMap } from "~/context/MapContext";
 
 const CATEGORIES = ["supermarket", "doctor", "school"];
+export const COLOR_CATEGORIES = {
+  supermarket: "#A8DAB5",
+  doctor: "#FDE295",
+  school: "#0080ff",
+};
 
 const getCategoryLocator = async (coordinates: String, category: String) => {
   const result = await fetch(
@@ -24,9 +31,9 @@ const getCategoryLocator = async (coordinates: String, category: String) => {
 
 const getIsochroneForCoord = async (coordinates: Number[]) => {
   const result = await fetch(
-    `https://api.mapbox.com/isochrone/v1/mapbox/cycling/${encodeURIComponent(
+    `https://api.mapbox.com/isochrone/v1/mapbox/walking/${encodeURIComponent(
       coordinates.join(",")
-    )}?contours_minutes=15&polygons=true&denoise=1&access_token=${
+    )}?contours_minutes=15&polygons=true&denoise=1&generalize=100&access_token=${
       process.env.MAPBOX_API_KEY
     }`
   );
@@ -37,37 +44,34 @@ const getPolygonsForCategory = (category: String, places: any) => {
   return Promise.all(
     places.map(async (place: { center: Number[] }) => {
       const isochrone = await getIsochroneForCoord(place.center);
-      // console.log("isocrone", isochrone);
       return isochrone;
     })
   );
 };
 
 const mergePolygons = (polygons: any) => {
-  return polygons.reduce(
-    (acc, curPolygon = []) => {
-      return martinez.union(acc, curPolygon);
-    },
-    [[[]]]
-  );
+  return polygons.reduce((acc, curPolygon) => {
+    return martinez.union(acc, curPolygon.coordinates);
+  }, polygons[0].coordinates);
 };
 
 export const loader = async ({ params }: LoaderArgs) => {
   const { coordinates } = params;
+
   const placesData = await CATEGORIES.reduce(async (res, category) => {
     const places = await getCategoryLocator(coordinates || "", category);
 
     const polygons = (
       await getPolygonsForCategory(category, places.features)
     ).map((polygon) => {
-      return polygon.features[0].geometry.coordinates[0];
+      return polygon.features[0].geometry;
     });
 
     return {
       ...(await res),
       [category]: {
         places: places.features,
-        polygon: mergePolygons(polygons),
+        polygon: { type: "MultiPolygon", coordinates: mergePolygons(polygons) },
       },
     };
   }, {});
@@ -78,30 +82,95 @@ export const loader = async ({ params }: LoaderArgs) => {
 export default () => {
   const [showSidebar, setShowSidebar] = useState(true);
 
-  const toggleSidebar = () => setShowSidebar(prev => !prev)
+  const toggleSidebar = () => setShowSidebar((prev) => !prev);
   const { data } = useLoaderData<typeof loader>();
-  const [ dataAsObject, setDataAsObject ] = useState(JSON.parse(JSON.stringify(data)));
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const map = useMap();
 
-  useEffect(()=> {
-    if(data !== undefined) setDataAsObject(JSON.parse(JSON.stringify(data)));
-  }, [])
+  const [dataAsObject, setDataAsObject] = useState(
+    JSON.parse(JSON.stringify(data))
+  );
+
+  useEffect(() => {
+    if (data !== undefined) setDataAsObject(JSON.parse(JSON.stringify(data)));
+  }, []);
   const dataKeys = ["doctor", "school", "supermarket"];
 
-  
-  const formattedData = dataKeys.map((key : any) => {
-    return(
-      { 
-        title : key,
-        data : dataAsObject[key].places.map((placeObject : any) => {
-          return {
-            title : placeObject.text,
-            address : placeObject.properties.address,
-            center : placeObject.center
-          }
-        })
-      }
-    )
-  })
+  const formattedData = dataKeys.map((key: any) => {
+    return {
+      title: key,
+      data: dataAsObject[key].places.map((placeObject: any) => {
+        return {
+          title: placeObject.text,
+          address: placeObject.properties.address,
+          center: placeObject.center,
+        };
+      }),
+    };
+  });
+
+  useEffect(() => {
+    if (!map) return;
+
+    map.on("load", () => {
+      Object.entries(data).forEach(([category, categoryData]) => {
+        console.log("addply");
+        map.addSource(category, {
+          type: "geojson",
+          data: {
+            type: "Feature",
+            geometry: categoryData.polygon,
+          },
+        });
+        // Add a new layer to visualize the polygon.
+        map.addLayer({
+          id: category,
+          type: "fill",
+          source: category, // reference the data source
+          layout: {},
+          paint: {
+            "fill-color": COLOR_CATEGORIES[category],
+            "fill-opacity": 0.5,
+          },
+        });
+
+        categoryData.places.forEach((place) => {
+          new mapboxgl.Marker({ color: COLOR_CATEGORIES[category] })
+            .setLngLat(place.geometry.coordinates)
+            .addTo(map);
+        });
+      });
+    });
+  }, [map, data, selectedCategories]);
+
+  const handleSelectCategory = (e) => {
+    console.log("eee", e.target.value);
+    const category = e.target.value;
+    if (selectedCategories.includes(category)) {
+      setSelectedCategories(
+        selectedCategories.filter(
+          (selectedCategory) => selectedCategory !== category
+        )
+      );
+    } else {
+      setSelectedCategories([...selectedCategories, category]);
+    }
+  };
+
+  const renderButtonBar = () => (
+    <div>
+      {CATEGORIES.map((category) => (
+        <button
+          className={`toggle-button`}
+          key={category}
+          value={category}
+          onClick={handleSelectCategory}
+        >
+          {category}
+        </button>
+      ))}
+    </div>
+  );
 
   return (
     <>

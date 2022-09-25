@@ -1,4 +1,12 @@
-import { useLoaderData, useSearchParams } from "@remix-run/react";
+import {
+  ChevronDoubleLeftIcon,
+  ChevronDoubleRightIcon,
+  ChevronDownIcon,
+} from "@heroicons/react/24/solid";
+import "../styles/sidebar/sidebar.css";
+import classNames from "classnames";
+import Topic from "~/components/sidebar/Topic";
+import { Link, useLoaderData } from "@remix-run/react";
 import type { LoaderArgs } from "@remix-run/server-runtime";
 import mapboxgl from "mapbox-gl";
 import * as martinez from "martinez-polygon-clipping";
@@ -70,17 +78,40 @@ export const loader = async ({ params }: LoaderArgs) => {
 };
 
 export default () => {
+  const [showSidebar, setShowSidebar] = useState(true);
+
+  const toggleSidebar = () => setShowSidebar((prev) => !prev);
   const { data } = useLoaderData<typeof loader>();
   const [selectedCategories, setSelectedCategories] = useState([]);
   const map = useMap();
+
+  const [dataAsObject, setDataAsObject] = useState(
+    JSON.parse(JSON.stringify(data))
+  );
+
+  useEffect(() => {
+    if (data !== undefined) setDataAsObject(JSON.parse(JSON.stringify(data)));
+  }, []);
+  const dataKeys = ["doctor", "school", "supermarket"];
+
+  const formattedData = dataKeys.map((key: any) => {
+    return {
+      title: key,
+      data: dataAsObject[key].places.map((placeObject: any) => {
+        return {
+          title: placeObject.text,
+          address: placeObject.properties.address,
+          center: placeObject.center,
+        };
+      }),
+    };
+  });
 
   useEffect(() => {
     if (!map) return;
 
     map.on("load", () => {
       Object.entries(data).forEach(([category, categoryData]) => {
-        // if (!selectedCategories.includes(category)) return;
-
         console.log("addply");
         map.addSource(category, {
           type: "geojson",
@@ -138,7 +169,53 @@ export default () => {
       ))}
     </div>
   );
-  console.log(data);
-  // return JSON.stringify(data, null, 2);
-  return renderButtonBar();
+
+  return (
+    <div className="flex h-full flex-row">
+      <div className={"map basis-4/12 lg:basis-9/12"}>
+        <Link to="/">
+          <img src={require("../images/Logo.png")} className="w-20" />
+        </Link>
+      </div>
+
+      <div
+        className={classNames(
+          "h-full max-h-full basis-8/12 overflow-auto lg:basis-3/12 ",
+          showSidebar && "shadow-black-500/50 bg-white shadow-lg"
+        )}
+      >
+        <div
+          className={classNames(
+            !showSidebar &&
+              "float-right rounded-md border-2 border-neutral-500/30 bg-white/30",
+            "sticky top-0 z-10 bg-white p-5"
+          )}
+        >
+          <button onClick={(e: any) => toggleSidebar()}>
+            {showSidebar ? (
+              <ChevronDoubleRightIcon className="h-6 w-6" />
+            ) : (
+              <ChevronDoubleLeftIcon className="h-6 w-6 " />
+            )}
+          </button>
+        </div>
+
+        {showSidebar && (
+          <div className="contextWrapper p-5">
+            {formattedData.map((topicData: any) => {
+              return (
+                <Topic
+                  title={topicData.title}
+                  key={topicData.title}
+                  content={topicData.data.map((content: any) => {
+                    return content;
+                  })}
+                />
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
 };

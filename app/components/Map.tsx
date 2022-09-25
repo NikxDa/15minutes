@@ -22,6 +22,14 @@ const Map = ({ className, accessToken }: MapProps) => {
       projection: { name: "globe" },
     });
 
+    /*
+    const marker = new mapboxgl.Marker({
+      color: "#FFFFFF",
+      draggable: false
+      }).setLngLat([-74.5, 40])
+      .addTo(map);
+    */
+
     map.on("style.load", () => {
       map.setFog({}); // Set the default atmosphere style
     });
